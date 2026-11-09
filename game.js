@@ -43,7 +43,7 @@
   ];
   const enemyStarts = [300,480,760,1060,1330,1610,1900,2170,2490,2750,2960];
   function freshGame(){
-    player={x:76,y:390,vx:0,vy:0,w:25,h:42,face:1,onGround:false,hp:8,maxHp:8,inv:0,dash:0,dashCool:0,fireCd:0,slash:0,charge:0,anim:0};
+    player={x:76,y:390,vx:0,vy:0,w:25,h:42,face:1,onGround:false,hp:8,maxHp:8,inv:0,dash:0,dashCool:0,fireCd:0,saberCd:0,slash:0,charge:0,anim:0};
     enemies=enemyStarts.map((x,i)=>({x,y:428,w:28,h:34,hp:2,dir:i%2?1:-1,home:x,phase:i*.7,alive:true}));
     shots=[];particles=[];pickups=[{x:700,y:321,kind:'heart',got:false},{x:1738,y:438,kind:'heart',got:false},{x:2325,y:438,kind:'energy',got:false},{x:2760,y:295,kind:'heart',got:false}];
     boss={x:3130,y:363,w:64,h:90,hp:18,maxHp:18,dir:-1,alive:true,cd:1.2,flash:0};
@@ -92,12 +92,12 @@
     const up=e=>{e.preventDefault();if(action==='jump')keys.jump=false;else if(action==='dash')keys.dash=false;else if(action==='fire')keys.fire=false;else if(action!=='switch')keys[action]=false};
     button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);button.addEventListener('lostpointercapture',up);
   });
-  function gamepadInput(){const gp=navigator.getGamepads?.()[0];for(const k of Object.keys(padInput))padInput[k]=false;if(!gp)return;padInput.left=gp.axes[0]<-.35||!!gp.buttons[14]?.pressed;padInput.right=gp.axes[0]>.35||!!gp.buttons[15]?.pressed;padInput.jump=!!gp.buttons[0]?.pressed;padInput.fire=!!gp.buttons[2]?.pressed||!!gp.buttons[7]?.pressed;padInput.dash=!!gp.buttons[1]?.pressed;if(gp.buttons[3]?.pressed&&!gamepadInput.lastSwap){swapHero()}gamepadInput.lastSwap=!!gp.buttons[3]?.pressed;if(gp.buttons[9]?.pressed&&!gamepadInput.lastStart){if(state==='playing'||state==='paused')togglePause();else begin()}gamepadInput.lastStart=!!gp.buttons[9]?.pressed;}
+  function gamepadInput(){const gp=navigator.getGamepads?.()[0];for(const k of Object.keys(padInput))padInput[k]=false;if(!gp)return;padInput.left=gp.axes[0]<-.35||!!gp.buttons[14]?.pressed;padInput.right=gp.axes[0]>.35||!!gp.buttons[15]?.pressed;padInput.jump=!!gp.buttons[0]?.pressed;padInput.fire=!!gp.buttons[2]?.pressed||!!gp.buttons[7]?.pressed;padInput.dash=!!gp.buttons[1]?.pressed;padInput.saber=!!gp.buttons[5]?.pressed;if(gp.buttons[3]?.pressed&&!gamepadInput.lastSwap){swapHero()}gamepadInput.lastSwap=!!gp.buttons[3]?.pressed;if(gp.buttons[9]?.pressed&&!gamepadInput.lastStart){if(state==='playing'||state==='paused')togglePause();else begin()}gamepadInput.lastStart=!!gp.buttons[9]?.pressed;}
   function swapHero(){if(state!=='playing')return;activeHero=1-activeHero;player.slash=0;player.charge=0;for(let i=0;i<8;i++)particles.push({x:player.x+12,y:player.y+20,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*4,life:.34,color:heroes[activeHero].color,size:3});sfx(activeHero?660:510,.12,'triangle',.055);updateReadout()}
   const down=(...list)=>list.some(k=>keys[k]||padInput[k]);
   function update(dt){
     clock+=dt;gamepadInput();if(state!=='playing')return;
-    dt=Math.min(dt,.035);const p=player; p.anim+=dt*9;p.inv=Math.max(0,p.inv-dt);p.dashCool=Math.max(0,p.dashCool-dt);p.fireCd-=dt;p.slash=Math.max(0,p.slash-dt);p.charge=down('j','z','fire')?p.charge+dt:0;
+    dt=Math.min(dt,.035);const p=player; p.anim+=dt*9;p.inv=Math.max(0,p.inv-dt);p.dashCool=Math.max(0,p.dashCool-dt);p.fireCd-=dt;p.saberCd=Math.max(0,p.saberCd-dt);p.slash=Math.max(0,p.slash-dt);p.charge=down('j','z','fire')?p.charge+dt:0;
     if(down('left','a','arrowleft')){p.vx-=1200*dt;p.face=-1}if(down('right','d','arrowright')){p.vx+=1200*dt;p.face=1}
     p.vx=Math.max(-235,Math.min(235,p.vx));if(!down('left','a','arrowleft')&&!down('right','d','arrowright'))p.vx*=Math.pow(.001,dt);
     if(down('jump',' ','w','arrowup')&&p.onGround){p.vy=-475;p.onGround=false;sfx(260,.12,'triangle',.035)}
@@ -105,8 +105,9 @@
     if(p.dash>0){p.dash-=dt;p.vx=p.face*500}else p.vy+=1250*dt;
     if(down('j','z','fire')&&p.fireCd<=0){
       if(activeHero===0){const charged=p.charge>1.0;shots.push({x:p.x+(p.face>0?p.w:-15),y:p.y+17,w:charged?27:16,h:charged?15:9,vx:p.face*(charged?630:510),vy:0,damage:charged?3:1,life:1.15,hero:0,charged});p.fireCd=charged?.42:.24;sfx(charged?760:540,.09,'square',charged?.06:.035)}
-      else{p.slash=.23;p.fireCd=.32;const reach=p.face>0?52:-30;enemies.forEach(e=>{if(e.alive&&Math.abs((e.x+e.w/2)-(p.x+reach))<48&&Math.abs(e.y-p.y)<48)damageEnemy(e,2)});if(boss.alive&&Math.abs((boss.x+boss.w/2)-(p.x+reach))<68&&Math.abs(boss.y-p.y)<80)damageBoss(2);sfx(310,.15,'sawtooth',.05)}
+      else{strikeWithSaber();p.fireCd=.32}
     }
+    if(down('saber','c')&&p.saberCd<=0)strikeWithSaber();
     p.x+=p.vx*dt;p.x=Math.max(0,Math.min(worldWidth-p.w,p.x));p.y+=p.vy*dt;p.onGround=false;
     for(const platform of platforms){if(p.x+p.w>platform.x&&p.x<platform.x+platform.w&&p.y+p.h>=platform.y&&p.y+p.h-p.vy*dt<=platform.y&&p.vy>=0){p.y=platform.y-p.h;p.vy=0;p.onGround=true}}
     if(p.y>H+120){hurt(2);p.y=390;p.vy=0}
@@ -125,6 +126,12 @@
   function hurt(amount){if(player.inv>0||state!=='playing')return;player.hp-=amount;player.inv=.9;if(!reducedMotion)shake=5;sfx(105,.22,'square',.06);for(let i=0;i<12;i++)particles.push({x:player.x+12,y:player.y+20,vx:(Math.random()-.5)*150,vy:(Math.random()-.5)*120,life:.35,color:'#ff5d70',size:3});if(player.hp<=0){player.hp=0;state='dead';stopAudio();updateReadout()}}
   function damageEnemy(e,n){e.hp-=n;score+=n*20;for(let i=0;i<4;i++)particles.push({x:e.x+14,y:e.y+14,vx:(Math.random()-.5)*120,vy:(Math.random()-.5)*100,life:.3,color:'#ff8d8d',size:3});if(e.hp<=0){e.alive=false;score+=100;sfx(125,.12,'square',.035)}}
   function damageBoss(n){if(!boss.alive)return;boss.hp-=n;boss.flash=.15;score+=15;if(!reducedMotion)shake=2;sfx(230,.08,'sawtooth',.04);if(boss.hp<=0){boss.alive=false;score+=2000;for(let i=0;i<40;i++)particles.push({x:boss.x+32,y:boss.y+45,vx:(Math.random()-.5)*340,vy:(Math.random()-.5)*340,life:.8+Math.random()*.4,color:['#55e4ff','#ffcb56','#ff556b'][i%3],size:3+Math.random()*5})}}
+  function strikeWithSaber(){
+    const p=player;p.slash=.23;p.saberCd=.32;
+    enemies.forEach(e=>{const delta=e.x+e.w/2-(p.x+p.w/2);if(e.alive&&delta*p.face>0&&Math.abs(delta)<58&&Math.abs(e.y-p.y)<48)damageEnemy(e,2)});
+    const bossDelta=boss.x+boss.w/2-(p.x+p.w/2);if(boss.alive&&bossDelta*p.face>0&&Math.abs(bossDelta)<78&&Math.abs(boss.y-p.y)<80)damageBoss(2);
+    sfx(activeHero===0?390:310,.15,'sawtooth',.05);
+  }
   function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function drawBackground(){
     const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1c34');g.addColorStop(.55,'#142d45');g.addColorStop(1,'#172a39');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -142,7 +149,7 @@
     if(inv>0&&Math.floor(inv*18)%2===0)ctx.globalAlpha=.35;
     const sheet=spriteSheets[hero===0?'x':'zero'];
     if(sheet){
-      const frames=spriteFrames[hero], frame=frames[slash>0&&hero===1?2:Math.floor(anim*2)%2];
+      const frames=spriteFrames[hero], frame=frames[slash>0?2:Math.floor(anim*2)%2];
       ctx.imageSmoothingEnabled=false;
       ctx.drawImage(sheet,frame[0],frame[1],frame[2],frame[3],X-4,Y-1,33,43);
     }else{
@@ -153,7 +160,7 @@
       rect(X+4,Y+3,18,16,secondary);rect(X+7,Y,13,13,col);rect(X+6,Y+4,17,4,hero===0?'#9df4ff':'#ffe19b');rect(X+10,Y+7,10,5,'#091625');rect(X+12,Y+8,6,2,hero===0?'#9ff8ff':'#ffb2a1');rect(X+4,Y+12,4,7,dark);rect(X+19,Y+12,5,6,dark);
       if(hero===1){rect(X+5,Y-4,9,4,'#ff314c');rect(X-1,Y-5,8,4,'#ff5260');rect(X-6,Y-3,7,3,'#bd274c')}
     }
-    if(slash>0&&hero===1){ctx.globalAlpha=.88;ctx.strokeStyle='#ffe582';ctx.lineWidth=5;ctx.beginPath();ctx.arc(X+28,Y+21,27,-.95,.85);ctx.stroke();ctx.strokeStyle='#ff5577';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X+28,Y+21,32,-.9,.7);ctx.stroke();ctx.globalAlpha=1}
+    if(slash>0){ctx.globalAlpha=.9;ctx.strokeStyle=hero===0?'#b8faff':'#ffe582';ctx.lineWidth=5;ctx.beginPath();ctx.arc(X+28,Y+21,27,-.95,.85);ctx.stroke();ctx.strokeStyle=hero===0?'#3ccfff':'#ff5577';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X+28,Y+21,32,-.9,.7);ctx.stroke();ctx.globalAlpha=1}
     ctx.restore();
   }
   function drawEnemy(e){const x=e.x-cameraX;rect(x+4,e.y+5,20,25,'#4a2d4d');rect(x+1,e.y+13,26,13,'#c7445f');rect(x+5,e.y+4,18,13,'#ad3c57');rect(x+9,e.y+8,11,5,'#ffb36b');rect(x+3,e.y+27,8,7,'#202a3d');rect(x+18,e.y+27,8,7,'#202a3d');rect(x-3,e.y+16,5,7,'#ff7180')}
@@ -172,7 +179,7 @@
     if(state==='title')drawTitle();if(state==='paused')drawOverlay('PAUSED','Press P / START to resume','');if(state==='dead')drawOverlay('SYSTEM FAILURE','Your armor is depleted.','PRESS ENTER OR TAP TO RETRY');if(state==='win')drawOverlay('WARDEN DOWN','You cleared the sector. DATA '+score,'PRESS ENTER OR TAP TO RUN AGAIN');
   }
   function drawHUD(){
-    rect(17,15,234,64,'#081421dd');rect(17,15,234,2,'#46dafa');ctx.fillStyle='#e8f7ff';ctx.font='bold 14px monospace';ctx.fillText(activeHero===0?'X / PLASMA BUSTER':'ZERO / ENERGY SABER',29,37);
+    rect(17,15,234,64,'#081421dd');rect(17,15,234,2,'#46dafa');ctx.fillStyle='#e8f7ff';ctx.font='bold 14px monospace';ctx.fillText(activeHero===0?'X / BUSTER + Z-SABER':'ZERO / Z-SABER',29,37);
     for(let i=0;i<8;i++){rect(29+i*22,48,17,9,'#22364a');if(i<player.hp)rect(29+i*22,48,17,9,activeHero===0?'#52dfff':'#ffcc57')}
     ctx.fillStyle='#829caf';ctx.font='9px monospace';ctx.fillText('ARMOR',29,70);
     rect(760,15,183,45,'#081421dd');ctx.fillStyle='#7f9aad';ctx.font='9px monospace';ctx.fillText('MISSION DATA',773,32);ctx.fillStyle='#f0fbff';ctx.font='bold 15px monospace';ctx.fillText(String(score).padStart(6,'0'),773,51);
@@ -186,9 +193,9 @@
     ctx.fillStyle='#edfaff';ctx.font='900 62px Impact, "Arial Narrow", sans-serif';ctx.fillText('REPL0ID',56,151);ctx.fillStyle='#54ddff';ctx.fillText('REBELLION',56,208);
     ctx.fillStyle='#8da9bb';ctx.font='13px monospace';ctx.fillText('Two hunters. One machine uprising.',60,239);
     drawHero(675,206,0,1,clock,0,0);drawHero(784,206,1,1,clock+1,0,0);
-    rect(60,277,388,1,'#294357');ctx.fillStyle='#a7bfce';ctx.font='11px monospace';ctx.fillText('X  ·  hold FIRE to charge a piercing plasma shot',60,305);ctx.fillText('ZERO · close the gap and carve with the energy saber',60,331);ctx.fillText('Q / Y  ·  swap hunters anytime · pickups restore armor',60,357);
+    rect(60,277,388,1,'#294357');ctx.fillStyle='#a7bfce';ctx.font='11px monospace';ctx.fillText('X  ·  J fires plasma · C swings the Z-Saber',60,305);ctx.fillText('ZERO · J swings the Z-Saber · close the gap',60,331);ctx.fillText('Q / Y  ·  swap hunters anytime · pickups restore armor',60,357);
     ctx.fillStyle='#59e2ff';ctx.font='bold 15px monospace';ctx.fillText('▶  PRESS ENTER / SPACE OR TAP TO DEPLOY',60,414);
-    ctx.fillStyle='#7892a6';ctx.font='9px monospace';ctx.fillText('KEYBOARD: A/D MOVE · SPACE JUMP · J FIRE · K DASH · Q SWAP',60,448);ctx.fillText('CONTROLLER: LEFT STICK / D-PAD · A JUMP · X FIRE · B DASH · Y SWAP',60,468);
+    ctx.fillStyle='#7892a6';ctx.font='9px monospace';ctx.fillText('KEYBOARD: A/D MOVE · SPACE JUMP · J FIRE · C SABER · K DASH · Q SWAP',60,448);ctx.fillText('PAD: STICK / D-PAD · A JUMP · X FIRE · RB SABER · B DASH · Y SWAP',60,468);
     ctx.textAlign='right';ctx.fillStyle='#e6c46a';ctx.fillText('BEST DATA  '+String(best).padStart(6,'0'),899,500);ctx.textAlign='left';
   }
   function drawOverlay(title,subtitle,action){ctx.fillStyle='#06121bdd';ctx.fillRect(0,0,W,H);ctx.strokeStyle=state==='win'?'#f4cb69':'#4bd9f1';ctx.lineWidth=1;ctx.strokeRect(225,164,510,200);ctx.textAlign='center';ctx.fillStyle=state==='win'?'#ffdc7f':'#e6f9ff';ctx.font='bold 32px Impact, sans-serif';ctx.fillText(title,W/2,227);ctx.fillStyle='#9cb6c5';ctx.font='13px monospace';ctx.fillText(subtitle,W/2,261);ctx.fillStyle='#48dcfa';ctx.font='bold 11px monospace';ctx.fillText(action||'PRESS P / START TO RESUME',W/2,313);ctx.textAlign='left'}
