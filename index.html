@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#07111e" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2307111e'/%3E%3Cpath d='M12 12h40v40H12z' fill='%2348d9ff'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='monospace' font-size='24' font-weight='bold' fill='%2307111e'%3EDC%3C/text%3E%3C/svg%3E" />
+  <title>Reploid Rebellion — Dual Core</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Dual Core home"><span class="brand-mark">D<span>/</span>C</span><span class="brand-name">DUAL CORE <small>REPL0ID REBELLION</small></span></a>
+      <div class="top-actions">
+        <span class="live"><i></i> SYSTEM ONLINE</span>
+        <button id="soundBtn" class="icon-btn" aria-label="Toggle soundtrack" title="Toggle soundtrack">♫ <span>SOUND ON</span></button>
+        <button id="motionBtn" class="icon-btn" aria-label="Toggle screen shake" title="Toggle screen shake">◉ <span>FX ON</span></button>
+        <button id="pauseBtn" class="icon-btn" aria-label="Pause game" title="Pause">Ⅱ <span>PAUSE</span></button>
+      </div>
+    </header>
+    <section class="game-wrap" aria-label="Dual Core game">
+      <div class="game-frame">
+        <canvas id="game" width="960" height="540" aria-label="Side scrolling action platform game"></canvas>
+        <div class="scanline"></div>
+        <div class="touch-controls" aria-label="Touch controls">
+          <div class="dpad">
+            <button data-key="left" aria-label="Move left">◀</button>
+            <button data-key="right" aria-label="Move right">▶</button>
+          </div>
+          <div class="touch-actions">
+            <button data-key="switch" class="switch-touch" aria-label="Switch hero">SWAP</button>
+            <button data-key="dash" aria-label="Dash">DASH</button>
+            <button data-key="jump" class="jump-touch" aria-label="Jump">JUMP</button>
+            <button data-key="fire" class="fire-touch" aria-label="Attack">FIRE</button>
+          </div>
+        </div>
+      </div>
+      <div class="below-bar">
+        <div class="objective"><span class="signal">◆</span><div><b>MISSION 01</b><small>STOP THE IRON WARDEN</small></div></div>
+        <div class="key-guide"><span><kbd>A</kbd><kbd>D</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>J</kbd> FIRE</span><span><kbd>K</kbd> DASH</span><span><kbd>Q</kbd> SWAP</span></div>
+        <button id="restartBtn" class="restart">↻ <span>RESTART</span></button>
+      </div>
+    </section>
+    <section class="feature-row">
+      <article class="feature"><span class="feature-icon blue">✦</span><div><h2>ONE MISSION. TWO HUNTERS.</h2><p>Swap instantly between X’s charged blaster and Zero’s close-range energy saber. Each has a role—master both.</p></div></article>
+      <article class="feature"><span class="feature-icon gold">⌁</span><div><h2>PLAY YOUR WAY</h2><p>Keyboard, controller, or touch. Gamepad support and generous touch targets are ready. Soundtrack and screen motion are optional.</p></div></article>
+      <article class="feature score-feature"><span class="feature-icon pink">◎</span><div><h2>FIELD READOUT</h2><p><span id="statusReadout">Choose your hunter and launch the mission.</span></p></div></article>
+    </section>
+    <footer><span>UNOFFICIAL FAN-MADE TRIBUTE · MEGA MAN & CHARACTERS © CAPCOM</span><span>PROVIDED X SPRITES: THE_WANDERER · NOT AFFILIATED WITH CAPCOM</span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
