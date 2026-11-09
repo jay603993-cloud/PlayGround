@@ -17,6 +17,7 @@
     [[27,43,22,41],[54,42,22,42],[81,42,22,42]],
     [[22,7,30,32],[55,7,27,32],[88,42,30,34]]
   ];
+  const fittedSpriteFrames = [null, null];
   for (const [hero, file] of [['x','x-custom.png'],['zero','zero-custom.png']]) {
     const image = new Image();
     image.onload = () => {
@@ -31,6 +32,24 @@
         }
         sheetCtx.putImageData(pixels, 0, 0);
       }
+      const heroIndex = hero === 'x' ? 0 : 1;
+      fittedSpriteFrames[heroIndex] = spriteFrames[heroIndex].map(([sx, sy, sw, sh]) => {
+        const pixels = sheetCtx.getImageData(sx, sy, sw, sh).data;
+        let left = sw, top = sh, right = -1, bottom = -1;
+        for (let py = 0; py < sh; py++) {
+          for (let px = 0; px < sw; px++) {
+            if (pixels[(py * sw + px) * 4 + 3] > 16) {
+              left = Math.min(left, px); top = Math.min(top, py);
+              right = Math.max(right, px); bottom = Math.max(bottom, py);
+            }
+          }
+        }
+        if (right < left || bottom < top) return { x: sx, y: sy, w: sw, h: sh };
+        const pad = 1;
+        left = Math.max(0, left - pad); top = Math.max(0, top - pad);
+        right = Math.min(sw - 1, right + pad); bottom = Math.min(sh - 1, bottom + pad);
+        return { x: sx + left, y: sy + top, w: right - left + 1, h: bottom - top + 1 };
+      });
       spriteSheets[hero] = sheet;
     };
     image.src = `assets/${file}`;
@@ -147,11 +166,13 @@
     ctx.save();if(face<0){ctx.translate(X*2+25,0);ctx.scale(-1,1)}
     if(dash>0){ctx.globalAlpha=.34;for(let n=1;n<=3;n++){rect(X-n*12,Y+5,23,34,hero===0?'#62eaff55':'#ffd36a55')}ctx.globalAlpha=1}
     if(inv>0&&Math.floor(inv*18)%2===0)ctx.globalAlpha=.35;
-    const sheet=spriteSheets[hero===0?'x':'zero'];
+    const heroIndex=hero===0?0:1, sheet=spriteSheets[heroIndex===0?'x':'zero'];
     if(sheet){
-      const frames=spriteFrames[hero], frame=frames[slash>0?2:Math.floor(anim*2)%2];
+      const frames=fittedSpriteFrames[heroIndex]||spriteFrames[heroIndex].map(([sx,sy,sw,sh])=>({x:sx,y:sy,w:sw,h:sh}));
+      const frame=frames[slash>0?2:Math.floor(anim*2)%2];
+      const scale=Math.min(33/frame.w,43/frame.h),drawW=frame.w*scale,drawH=frame.h*scale;
       ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(sheet,frame[0],frame[1],frame[2],frame[3],X-4,Y-1,33,43);
+      ctx.drawImage(sheet,frame.x,frame.y,frame.w,frame.h,X+12.5-drawW/2,Y+42-drawH,drawW,drawH);
     }else{
       // Small fallback while the supplied sprite sheets are loading.
       rect(X+3,Y+31+bob,8,10,dark);rect(X+15,Y+31-bob,8,10,dark);rect(X+1,Y+38,12,5,secondary);rect(X+14,Y+38,12,5,secondary);
