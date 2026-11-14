@@ -1,15 +1,11 @@
-// Decides whether OpenCode goes through Cloudflare WARP for this run.
-// The omsite toggle (on by default) adds the `warp` label. WARP is skipped only for
-// Default (no model/* label) when Fusion is installed on this run, because Default
-// then reaches Fusion through GitHub Copilot instead of rate-limited free models.
-// Fusion is known only here: it is on when this run resolved the Fusion plugin commit.
+// Decides whether OpenCode goes through Cloudflare WARP for this run. WARP is only
+// available when a specific model was picked (model/* label); Default builds never use
+// it, even when the admin enable_warp toggle is on.
 import { pathToFileURL } from 'node:url'
 
 export function warpDecision({ requested, fusionEnabled, labels = [] }) {
-  if (!requested) return 'off'
   const picked = labels.some(name => String(name).startsWith('model/'))
-  if (!picked && fusionEnabled) return 'skip'
-  return 'on'
+  return picked && requested ? 'on' : 'off'
 }
 
 export function labelNames(json) {

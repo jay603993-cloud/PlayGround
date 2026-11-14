@@ -50,8 +50,7 @@ export function retryableProviderError(error) {
     // A dropped upstream stream is worth another model, not a failed build.
     /upstream connection lost|connection (?:lost|reset|closed)|ECONNRESET|fetch failed|socket hang up|terminated/i.test(message)
 }
-// The local proxy relay (WARP wireproxy or DataImpulse) could not open a tunnel,
-// e.g. DataImpulse 407 TRAFFIC_EXHAUSTED surfaced as `502 Upstream Proxy Error`.
+// The local WARP relay could not open a tunnel, surfaced as `502 Upstream Proxy Error`.
 export function proxyTunnelError(error) {
   return !!error && typeof error === 'object' && /ERR_PROXY_TUNNEL|Proxy refused to open a tunnel|Upstream Proxy Error|TRAFFIC_EXHAUSTED/i.test(String(error.message || ''))
 }
@@ -188,22 +187,9 @@ export function applySkipDirectRouting(candidates, env = process.env) {
   if (!backup || !candidates.includes(backup)) return candidates
   return candidates.filter(model => !freeEgressModel(model))
 }
-// Runtime egress switch: when WARP passed its startup probe (WARP_RUNTIME_SWITCH=1) but a free
-// model still hits FreeUsageLimit mid-build, move `opencode serve` to the DataImpulse relay once.
-// The script's stdout only carries ::add-mask:: lines and is discarded; its stderr (no secrets) goes to the run log.
-export function runtimeProxySwitch({ env = process.env, binary, logFile }) {
-  if (env.WARP_RUNTIME_SWITCH !== '1' || env.PROXY_REQUEST !== 'true') return null // proxy toggle off by default
-  const script = join(dirname(fileURLToPath(import.meta.url)), 'runtime-proxy-switch.sh')
-  return () => new Promise(done => {
-    const fd = openSync(logFile, 'a')
-    const child = spawn('bash', [script], { cwd: env.PROJECT_DIR, env: { ...env, OPENCODE_BIN: binary }, stdio: ['ignore', 'ignore', fd] })
-    child.on('error', () => { closeSync(fd); done(false) })
-    child.on('close', status => { closeSync(fd); done(status === 0) })
-  })
-}
 // Lazy egress: WARP was skipped because Default starts with Fusion (WARP_LAZY=1). Before the
-// first free model runs, set WARP up (DataImpulse if WARP fails) and restart `opencode serve`
-// behind it. Exit 0 = WARP, 3 = DataImpulse, other = runner network. Runs at most once.
+// first free model runs, set WARP up and restart `opencode serve` behind it.
+// Exit 0 = WARP, other = runner network. Runs at most once.
 export function lazyProxySetup({ env = process.env, binary, logFile }) {
   if (env.WARP_LAZY !== '1') return null
   const script = join(dirname(fileURLToPath(import.meta.url)), 'lazy-proxy-setup.sh')
@@ -211,11 +197,11 @@ export function lazyProxySetup({ env = process.env, binary, logFile }) {
     const fd = openSync(logFile, 'a')
     const child = spawn('bash', [script], { cwd: env.PROJECT_DIR, env: { ...env, OPENCODE_BIN: binary }, stdio: ['ignore', 'ignore', fd] })
     child.on('error', () => { closeSync(fd); done('none') })
-    child.on('close', status => { closeSync(fd); done(status === 0 ? 'warp' : status === 3 ? 'dataimpulse' : 'none') })
+    child.on('close', status => { closeSync(fd); done(status === 0 ? 'warp' : 'none') })
   })
 }
-// Dead proxy: restart `opencode serve` without it (back to WARP after a runtime switch,
-// otherwise the runner network) instead of letting every model fail through it.
+// Dead proxy: restart `opencode serve` on the runner network instead of letting every model
+// fail through a broken tunnel.
 export function proxyDrop({ env = process.env, binary, logFile }) {
   const web = env.OPENCODE_WEB_DIR
   let current = ''
@@ -229,7 +215,7 @@ export function proxyDrop({ env = process.env, binary, logFile }) {
     child.on('close', status => { closeSync(fd); done(status === 0) })
   })
 }
-export async function runModels({ binary, port, promptFile, logFile, exitFile, selected, models = modelCandidates(selected), env = process.env, api = env.OPENCODE_PASSWORD ? createV2Client({ base: `http://127.0.0.1:${port}`, password: env.OPENCODE_PASSWORD }) : null, switchProxy = runtimeProxySwitch({ env, binary, logFile }), dropProxy, lazyProxy = lazyProxySetup({ env, binary, logFile }) }) {
+export async function runModels({ binary, port, promptFile, logFile, exitFile, selected, models = modelCandidates(selected), env = process.env, api = env.OPENCODE_PASSWORD ? createV2Client({ base: `http://127.0.0.1:${port}`, password: env.OPENCODE_PASSWORD }) : null, dropProxy, lazyProxy = lazyProxySetup({ env, binary, logFile }) }) {
   const directory = dirname(logFile), prompt = readFileSync(promptFile, 'utf8')
   const requiredShared = env.FUSION_REQUIRE_SHARED === 'true'
   if (requiredShared && env.FUSION_ROUTE !== 'shared') throw new Error('Required shared Fusion route unavailable')
@@ -241,7 +227,7 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
   const queue = applySkipDirectRouting(appendBackupModel(candidates, env), env)
   let sessionID = env.RESUME_SESSION_ID || '', child, interrupted = false, code = 1
   const attempts = []
-  let switched = false, fusionSwitched = false, dropped = false
+  let fusionSwitched = false, dropped = false
   const stop = signal => { interrupted = true; child?.kill(signal) }
   const onTerm = () => stop('SIGTERM'), onInt = () => stop('SIGINT')
   process.on('SIGTERM', onTerm); process.on('SIGINT', onInt)
@@ -254,9 +240,6 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
         appendFileSync(logFile, '[model-fallback] Leaving Fusion for a free model; setting up the WARP proxy now.\n')
         const mode = await setup().catch(() => 'none')
         appendFileSync(logFile, `[model-fallback] Lazy proxy: ${mode}.\n`)
-        // WARP passed its probe: the one-time DataImpulse switch on FreeUsageLimit applies as usual.
-        if (mode === 'warp' && !switchProxy) switchProxy = runtimeProxySwitch({ env: { ...env, WARP_RUNTIME_SWITCH: '1' }, binary, logFile })
-        if (mode === 'dataimpulse') switched = true
       }
       const started = Date.now()
       writeFileSync(join(directory, 'main-model'), model + '\n')
@@ -302,7 +285,7 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
       appendFileSync(logFile, `[timing] model ${model}: ${Date.now() - started} ms; cli exit ${cliCode}; terminal ${outcome || 'unverified'}; exit ${code}\n`)
       if (code !== 0 && model === fusionModel && failure) appendFileSync(logFile, fusionFailureLine(failure, env))
       if (code !== 0 && !interrupted && !dropped && proxyTunnelError(failure)) {
-        dropped = true; switched = true
+        dropped = true
         const drop = dropProxy === undefined ? proxyDrop({ env, binary, logFile }) : dropProxy
         appendFileSync(logFile, '[model-fallback] The proxy refused to open tunnels; restarting OpenCode without it.\n')
         const ok = drop ? await drop().catch(() => false) : false
@@ -320,15 +303,6 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
         appendFileSync(logFile, '[model-fallback] Shared Fusion unavailable; keeping the current fallback.\n')
       }
       if (code === 0 || interrupted || !retryable) break
-      if (!switched && switchProxy && freeEgressModel(model) && attempts.at(-1).error_class === 'free-limit') {
-        switched = true
-        appendFileSync(logFile, '[model-fallback] Free usage limit on the WARP exit; switching OpenCode to the DataImpulse proxy.\n')
-        const ok = await switchProxy().catch(() => false)
-        attempts.at(-1).proxy_switch = ok ? 'ok' : 'failed'
-        writeFileSync(join(directory, 'model-attempts.json'), JSON.stringify(attempts))
-        if (ok) { appendFileSync(logFile, `[model-fallback] DataImpulse proxy ready; retrying ${model}.\n`); index--; continue }
-        appendFileSync(logFile, '[model-fallback] DataImpulse proxy unavailable; keeping the current network.\n')
-      }
       if (model !== candidates.at(-1)) appendFileSync(logFile, '[model-fallback] Provider/model unavailable; advancing to the next candidate in the same session.\n')
     }
     if (interrupted && code === 0) code = 143

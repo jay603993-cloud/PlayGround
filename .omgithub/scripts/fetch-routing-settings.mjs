@@ -29,8 +29,8 @@ export function resolveRouting({ userWarpRequested, adminSettings, fusionEnabled
   const { enable_warp, skip_direct_opencode } = adminSettings
   const picked = labels.some(name => String(name).startsWith('model/'))
   const requested = Boolean(userWarpRequested || enable_warp)
-  // Same order as the old warp-decision.mjs: not requested -> off; Default with Fusion -> skip (lazy); else on.
-  const warp = !requested ? 'off' : (!picked && fusionEnabled ? 'skip' : 'on')
+  // Default builds (no model/* label) never use WARP, even when the admin toggle is on.
+  const warp = !picked || !requested ? 'off' : 'on'
   // Skip direct OpenCode only matters when WARP is not carrying free models: then free calls go to ondev (backup endpoint).
   return { warp, skipDirect: Boolean(skip_direct_opencode) && warp === 'off' }
 }
