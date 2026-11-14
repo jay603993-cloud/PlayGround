@@ -12,6 +12,8 @@
   let state = 'title', activeHero = 0, cameraX = 0, last = 0, clock = 0, shake = 0;
   let soundOn = true, reducedMotion = false, audio = null, musicTimer = null, score = 0, best = Number(localStorage.getItem('dualcore-best') || 0);
   const padInput = Object.create(null);
+  const touchHeld = Object.create(null);
+  const touchAxis = { x: 0, y: 0 };
   const spriteSheets = { x: null, zero: null };
   const spriteFrames = [
     [[27,43,22,41],[54,42,22,42],[81,42,22,42]],
@@ -105,20 +107,78 @@
   });
   window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
   canvas.addEventListener('pointerdown',()=>{if(state!=='playing')begin()});
+  const virtualStick=document.querySelector('.virtual-stick');
+  const stickKnob=virtualStick.querySelector('.stick-knob');
+  let stickPointer=null;
+  function updateStick(e){
+    const bounds=virtualStick.getBoundingClientRect();
+    const radius=Math.max(1,Math.min(bounds.width,bounds.height)*.34);
+    const dx=e.clientX-(bounds.left+bounds.width/2),dy=e.clientY-(bounds.top+bounds.height/2);
+    const length=Math.hypot(dx,dy),scale=length>radius?radius/length:1;
+    const x=dx*scale,y=dy*scale;
+    touchAxis.x=x/radius;touchAxis.y=y/radius;
+    stickKnob.style.transform=`translate(${x}px, ${y}px)`;
+    virtualStick.classList.toggle('is-active',Math.hypot(touchAxis.x,touchAxis.y)>.12);
+  }
+  virtualStick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;virtualStick.setPointerCapture(e.pointerId);if(state!=='playing')begin();updateStick(e)});
+  virtualStick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}});
+  function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;touchAxis.x=touchAxis.y=0;stickKnob.style.transform='translate(0, 0)';virtualStick.classList.remove('is-active')}
+  virtualStick.addEventListener('pointerup',releaseStick);virtualStick.addEventListener('pointercancel',releaseStick);virtualStick.addEventListener('lostpointercapture',releaseStick);
   document.querySelectorAll('.touch-controls button').forEach(button=>{
     const action=button.dataset.key;
-    button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);if(action==='switch')swapHero();else if(action==='jump'){keys.jump=true;if(state!=='playing')begin()}else if(action==='dash')keys.dash=true;else if(action==='fire'){keys.fire=true;fireHeldAt=clock}else keys[action]=true;});
-    const up=e=>{e.preventDefault();if(action==='jump')keys.jump=false;else if(action==='dash')keys.dash=false;else if(action==='fire')keys.fire=false;else if(action!=='switch')keys[action]=false};
-    button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);button.addEventListener('lostpointercapture',up);
+    const held=touchHeld[action]||(touchHeld[action]=new Set());
+    const release=e=>{
+      if(!held.delete(e.pointerId))return;
+      keys[action]=held.size>0;
+      button.classList.toggle('is-pressed',held.size>0);
+    };
+    button.addEventListener('pointerdown',e=>{
+      e.preventDefault();button.setPointerCapture(e.pointerId);
+      if(state!=='playing')begin();
+      if(action==='switch'){swapHero();return}
+      held.add(e.pointerId);keys[action]=true;button.classList.add('is-pressed');
+      if(action==='fire')fireHeldAt=clock;
+    });
+    button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
   });
-  function gamepadInput(){const gp=navigator.getGamepads?.()[0];for(const k of Object.keys(padInput))padInput[k]=false;if(!gp)return;padInput.left=gp.axes[0]<-.35||!!gp.buttons[14]?.pressed;padInput.right=gp.axes[0]>.35||!!gp.buttons[15]?.pressed;padInput.jump=!!gp.buttons[0]?.pressed;padInput.fire=!!gp.buttons[2]?.pressed||!!gp.buttons[7]?.pressed;padInput.dash=!!gp.buttons[1]?.pressed;padInput.saber=!!gp.buttons[5]?.pressed;if(gp.buttons[3]?.pressed&&!gamepadInput.lastSwap){swapHero()}gamepadInput.lastSwap=!!gp.buttons[3]?.pressed;if(gp.buttons[9]?.pressed&&!gamepadInput.lastStart){if(state==='playing'||state==='paused')togglePause();else begin()}gamepadInput.lastStart=!!gp.buttons[9]?.pressed;}
+  window.addEventListener('blur',()=>{
+    for(const action of Object.keys(touchHeld)){touchHeld[action].clear();keys[action]=false}
+    document.querySelectorAll('.touch-controls button').forEach(button=>button.classList.remove('is-pressed'));
+    stickPointer=null;touchAxis.x=touchAxis.y=0;stickKnob.style.transform='translate(0, 0)';virtualStick.classList.remove('is-active');
+    for(const key of Object.keys(keys))keys[key]=false;
+  });
+  function gamepadInput(){
+    const gp=navigator.getGamepads?.()[0];
+    for(const k of Object.keys(padInput))padInput[k]=false;
+    padInput.axis=0;
+    if(!gp)return;
+    const rawX=Number.isFinite(gp.axes?.[0])?gp.axes[0]:0;
+    const rawY=Number.isFinite(gp.axes?.[1])?gp.axes[1]:0;
+    const magnitude=Math.hypot(rawX,rawY),deadzone=.18;
+    if(magnitude>deadzone){const normalized=Math.min(1,(magnitude-deadzone)/(1-deadzone));padInput.axis=rawX/magnitude*normalized}
+    padInput.left=padInput.axis<-.2||!!gp.buttons?.[14]?.pressed;
+    padInput.right=padInput.axis>.2||!!gp.buttons?.[15]?.pressed;
+    padInput.jump=!!gp.buttons?.[0]?.pressed;padInput.fire=!!gp.buttons?.[2]?.pressed||!!gp.buttons?.[7]?.pressed;
+    padInput.dash=!!gp.buttons?.[1]?.pressed;padInput.saber=!!gp.buttons?.[5]?.pressed;
+    const swapPressed=!!gp.buttons?.[3]?.pressed;
+    if(swapPressed&&!gamepadInput.lastSwap)swapHero();gamepadInput.lastSwap=swapPressed;
+    const startPressed=!!gp.buttons?.[9]?.pressed;
+    if(startPressed&&!gamepadInput.lastStart){if(state==='playing'||state==='paused')togglePause();else begin()}gamepadInput.lastStart=startPressed;
+  }
   function swapHero(){if(state!=='playing')return;activeHero=1-activeHero;player.slash=0;player.charge=0;for(let i=0;i<8;i++)particles.push({x:player.x+12,y:player.y+20,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*4,life:.34,color:heroes[activeHero].color,size:3});sfx(activeHero?660:510,.12,'triangle',.055);updateReadout()}
-  const down=(...list)=>list.some(k=>keys[k]||padInput[k]);
+  const down=(...list)=>list.some(k=>keys[k]||padInput[k]||touchHeld[k]?.size);
+  function movementAxis(){
+    const keyboard=(down('right','d','arrowright')?1:0)-(down('left','a','arrowleft')?1:0);
+    const gamepad=padInput.axis||((padInput.right?1:0)-(padInput.left?1:0));
+    return Math.max(-1,Math.min(1,keyboard+gamepad+touchAxis.x));
+  }
   function update(dt){
     clock+=dt;gamepadInput();if(state!=='playing')return;
-    dt=Math.min(dt,.035);const p=player; p.anim+=dt*9;p.inv=Math.max(0,p.inv-dt);p.dashCool=Math.max(0,p.dashCool-dt);p.fireCd-=dt;p.saberCd=Math.max(0,p.saberCd-dt);p.slash=Math.max(0,p.slash-dt);p.charge=down('j','z','fire')?p.charge+dt:0;
-    if(down('left','a','arrowleft')){p.vx-=1200*dt;p.face=-1}if(down('right','d','arrowright')){p.vx+=1200*dt;p.face=1}
-    p.vx=Math.max(-235,Math.min(235,p.vx));if(!down('left','a','arrowleft')&&!down('right','d','arrowright'))p.vx*=Math.pow(.001,dt);
+    dt=Math.min(dt,.035);const p=player;p.inv=Math.max(0,p.inv-dt);p.dashCool=Math.max(0,p.dashCool-dt);p.fireCd-=dt;p.saberCd=Math.max(0,p.saberCd-dt);p.slash=Math.max(0,p.slash-dt);p.charge=down('j','z','fire')?p.charge+dt:0;
+    const move=movementAxis();
+    if(move){p.vx+=move*1200*dt;p.face=Math.sign(move)}
+    p.vx=Math.max(-235,Math.min(235,p.vx));if(!move)p.vx*=Math.pow(.001,dt);
+    if(Math.abs(p.vx)>22)p.anim+=dt*(7+Math.min(235,Math.abs(p.vx))*.012);
     if(down('jump',' ','w','arrowup')&&p.onGround){p.vy=-475;p.onGround=false;sfx(260,.12,'triangle',.035)}
     if(down('dash','k','x')&&p.dashCool<=0){p.dash=.18;p.dashCool=.72;p.vx=p.face*500;p.vy*=.15;sfx(180,.13,'sawtooth',.04)}
     if(p.dash>0){p.dash-=dt;p.vx=p.face*500}else p.vy+=1250*dt;
@@ -161,15 +221,15 @@
     for(let i=0;i<9;i++){let x=(i*143-cameraX*.7)%W;if(x<0)x+=W;rect(x,300+(i%3)*20,22,2,'#44d6ed55')}
   }
   function drawPlatform(p){const x=p.x-cameraX;if(x+p.w<0||x>W)return;rect(x,p.y,p.w,p.h,'#101d2b');rect(x,p.y,p.w,5,'#4ad8e9');rect(x,p.y+5,p.w,3,'#267287');for(let wx=x+7;wx<x+p.w-4;wx+=28){rect(wx,p.y+13,17,3,'#263b4b');rect(wx+3,p.y+22,5,3,'#183346')}if(p.y<450)for(let wx=x+14;wx<x+p.w;wx+=50)rect(wx,p.y+4,2,7,'#b3f8ff')}
-  function drawHero(x,y,hero,face,anim,slash,inv,dash=0){
-    const col=hero===0?colors.cyan:colors.gold, secondary=hero===0?colors.blue:'#e84e68', dark=hero===0?colors.navy:'#642d52';const bob=Math.sin(anim)*1.3, X=Math.round(x),Y=Math.round(y+bob);
+  function drawHero(x,y,hero,face,anim,slash,inv,dash=0,moving=false){
+    const col=hero===0?colors.cyan:colors.gold, secondary=hero===0?colors.blue:'#e84e68', dark=hero===0?colors.navy:'#642d52';const bob=moving?Math.sin(anim)*1.3:0, X=Math.round(x),Y=Math.round(y+bob);
     ctx.save();if(face<0){ctx.translate(X*2+25,0);ctx.scale(-1,1)}
     if(dash>0){ctx.globalAlpha=.34;for(let n=1;n<=3;n++){rect(X-n*12,Y+5,23,34,hero===0?'#62eaff55':'#ffd36a55')}ctx.globalAlpha=1}
     if(inv>0&&Math.floor(inv*18)%2===0)ctx.globalAlpha=.35;
     const heroIndex=hero===0?0:1, sheet=spriteSheets[heroIndex===0?'x':'zero'];
     if(sheet){
       const frames=fittedSpriteFrames[heroIndex]||spriteFrames[heroIndex].map(([sx,sy,sw,sh])=>({x:sx,y:sy,w:sw,h:sh}));
-      const frame=frames[slash>0?2:Math.floor(anim*2)%2];
+      const frame=frames[slash>0?2:(moving?Math.floor(anim*2)%2:0)];
       const scale=Math.min(33/frame.w,43/frame.h),drawW=frame.w*scale,drawH=frame.h*scale;
       ctx.imageSmoothingEnabled=false;
       ctx.drawImage(sheet,frame.x,frame.y,frame.w,frame.h,X+12.5-drawW/2,Y+42-drawH,drawW,drawH);
@@ -195,7 +255,7 @@
     enemies.forEach(e=>e.alive&&drawEnemy(e));drawBoss();
     shots.forEach(s=>{if(s.enemy){rect(s.x-cameraX,s.y,16,16,'#fb5266');rect(s.x-cameraX+4,s.y+4,8,8,'#ffd092')}else{rect(s.x-cameraX,s.y,s.w,s.h,s.charged?'#c2fff8':'#eaffff');rect(s.x-cameraX+2,s.y+2,s.w-4,s.h-4,s.charged?'#41dcff':'#36baff')}});
     particles.forEach(a=>{ctx.globalAlpha=Math.max(0,a.life*2);rect(a.x-cameraX,a.y,a.size,a.size,a.color);ctx.globalAlpha=1});
-    drawHero(player.x-cameraX,player.y,activeHero,player.face,player.anim,player.slash,player.inv,player.dash);
+    drawHero(player.x-cameraX,player.y,activeHero,player.face,player.anim,player.slash,player.inv,player.dash,Math.abs(player.vx)>22||player.dash>0);
     ctx.restore();drawHUD();
     if(state==='title')drawTitle();if(state==='paused')drawOverlay('PAUSED','Press P / START to resume','');if(state==='dead')drawOverlay('SYSTEM FAILURE','Your armor is depleted.','PRESS ENTER OR TAP TO RETRY');if(state==='win')drawOverlay('WARDEN DOWN','You cleared the sector. DATA '+score,'PRESS ENTER OR TAP TO RUN AGAIN');
   }
@@ -213,7 +273,7 @@
     ctx.fillStyle='#44dffc';ctx.font='bold 12px monospace';ctx.fillText('A DUAL-CORE FAN-MADE ACTION PLATFORMER',58,77);
     ctx.fillStyle='#edfaff';ctx.font='900 62px Impact, "Arial Narrow", sans-serif';ctx.fillText('REPL0ID',56,151);ctx.fillStyle='#54ddff';ctx.fillText('REBELLION',56,208);
     ctx.fillStyle='#8da9bb';ctx.font='13px monospace';ctx.fillText('Two hunters. One machine uprising.',60,239);
-    drawHero(675,206,0,1,clock,0,0);drawHero(784,206,1,1,clock+1,0,0);
+    drawHero(675,206,0,1,clock,0,0,0,true);drawHero(784,206,1,1,clock+1,0,0,0,true);
     rect(60,277,388,1,'#294357');ctx.fillStyle='#a7bfce';ctx.font='11px monospace';ctx.fillText('X  ·  J fires plasma · C swings the Z-Saber',60,305);ctx.fillText('ZERO · J swings the Z-Saber · close the gap',60,331);ctx.fillText('Q / Y  ·  swap hunters anytime · pickups restore armor',60,357);
     ctx.fillStyle='#59e2ff';ctx.font='bold 15px monospace';ctx.fillText('▶  PRESS ENTER / SPACE OR TAP TO DEPLOY',60,414);
     ctx.fillStyle='#7892a6';ctx.font='9px monospace';ctx.fillText('KEYBOARD: A/D MOVE · SPACE JUMP · J FIRE · C SABER · K DASH · Q SWAP',60,448);ctx.fillText('PAD: STICK / D-PAD · A JUMP · X FIRE · RB SABER · B DASH · Y SWAP',60,468);
