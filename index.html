@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#071322">
+<title>Maverick Run — X Sprite Lab</title>
+<style>
+:root{color-scheme:dark;--cyan:#55eaff;--blue:#138cdb;--panel:#102238;--ink:#071322}*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}body{display:flex;justify-content:center;color:#eafaff}button{font:inherit;color:inherit;touch-action:none;cursor:pointer}#app{width:min(100vw,900px);height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#15334c 0,#091828 62%,#06101c 100%);padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);gap:8px}.topbar{height:44px;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px}.brand{font-weight:900;letter-spacing:.07em;font-size:15px}.brand span{color:var(--cyan)}.top-actions{display:flex;gap:7px}.ui-btn{border:1px solid #2e6687;background:linear-gradient(#1b3853,#10263b);border-radius:11px;padding:8px 11px;font-size:12px;font-weight:800;box-shadow:0 3px 0 #07101a}.ui-btn:active,.ui-btn.selected{transform:translateY(2px);box-shadow:none;background:#176093}.stage-wrap{position:relative;width:100%;flex:0 1 auto;min-height:120px;max-height:54vh;aspect-ratio:16/9;margin:auto 0 0;border:1px solid #287299;border-radius:12px;overflow:hidden;background:#071522;box-shadow:0 0 22px #00bfff22}#game{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}.status{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;pointer-events:none;text-shadow:0 2px 3px #000;font-size:10px;font-weight:800;letter-spacing:.08em;color:#d9f9ff}.meter{position:absolute;left:11px;top:25px;height:7px;width:82px;border:1px solid #9deafa;border-radius:6px;background:#17283b;overflow:hidden}.meter i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#00d0ff,#baffff)}.help{font-size:10px;color:#8daec0;text-align:center;line-height:1.2;padding:1px 0}.controls{height:clamp(150px,27vh,220px);min-height:142px;display:flex;justify-content:space-between;align-items:center;padding:2px 4px 5px;gap:20px}.dpad{width:min(42vw,220px);height:min(42vw,220px);max-height:100%;position:relative;flex:none}.pad{position:absolute;width:34%;height:34%;border:1px solid #4782a4;background:linear-gradient(145deg,#24435c,#10253a);border-radius:13px;box-shadow:0 4px 0 #07111b;display:grid;place-items:center;font-size:22px;font-weight:900;color:#c9f5ff}.pad:active,.pad.active{background:#087eb2;transform:translateY(3px);box-shadow:0 1px 0 #07111b}.pad.up{left:33%;top:0}.pad.down{left:33%;bottom:0}.pad.left{left:0;top:33%}.pad.right{right:0;top:33%}.actions{display:grid;grid-template-columns:repeat(2,minmax(62px,78px));grid-template-rows:repeat(2,minmax(62px,78px));gap:13px;align-content:center;justify-content:end;flex:1}.action{min-width:60px;min-height:60px;border-radius:50%;border:2px solid #6699ba;background:radial-gradient(circle at 35% 27%,#355773,#142c43 72%);box-shadow:0 5px 0 #06101a,0 0 12px #00bfff18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11px;font-weight:900;letter-spacing:.03em}.action b{font-size:19px;line-height:20px;color:#8eeeff}.action:active,.action.active{transform:translateY(4px);box-shadow:0 1px 0 #06101a;background:radial-gradient(circle at 35% 27%,#1685b5,#0b3d5d)}.action[data-action="jump"]{border-color:#60bde9}.action[data-action="dash"]{border-color:#efb96b}.action[data-action="saber"]{border-color:#b8a2ff}.action[data-action="buster"]{border-color:#74efc3}.footnote{height:15px;min-height:15px;font-size:9px;color:#68869b;text-align:center}.modal{position:fixed;inset:0;z-index:5;background:#030a12eF;display:none;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{width:min(100%,760px);max-height:94dvh;background:#0d2032;border:1px solid #287299;border-radius:17px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 50px #000b}.modal-head{display:flex;align-items:center;justify-content:space-between}.modal-head h2{margin:0;color:var(--cyan);font-size:18px}.anim-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:auto;overscroll-behavior:contain;padding:2px}.anim-option{min-height:52px;text-align:left;padding:9px 10px;border-radius:11px;border:1px solid #315773;background:#142b40;font-weight:800;font-size:12px}.anim-option small{display:block;font-weight:500;color:#85aabd;margin-top:3px}.anim-option.selected{border-color:#57e7ff;background:#12425b}.preview-bar{display:flex;align-items:center;justify-content:space-between;gap:8px}.preview-name{font-weight:800;color:#bceefa;font-size:12px;flex:1}.file-input{display:none}.load-label{cursor:pointer}.toast{position:absolute;left:50%;top:48px;transform:translateX(-50%);z-index:3;background:#152f45;border:1px solid #55dfff;border-radius:10px;padding:7px 10px;font-size:11px;display:none;white-space:nowrap}.toast.show{display:block}
+@media (orientation:landscape) and (max-height:560px){#app{width:100vw;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));gap:4px}.topbar{height:34px;min-height:34px}.stage-wrap{max-height:50vh;width:min(60vw,720px);margin:0 auto 0}.controls{position:absolute;left:0;right:0;bottom:15px;height:38vh;min-height:120px;padding:0 18px;pointer-events:none}.dpad,.actions{pointer-events:auto}.dpad{width:min(34vh,190px);height:min(34vh,190px)}.actions{grid-template-columns:repeat(2,64px);grid-template-rows:repeat(2,64px);gap:9px}.action{min-width:58px;min-height:58px}.help{position:absolute;bottom:4px;left:0;right:0}.footnote{display:none}}
+@media (max-width:380px){#app{padding-left:8px;padding-right:8px;gap:5px}.actions{grid-template-columns:repeat(2,62px);grid-template-rows:repeat(2,62px);gap:9px}.action{min-width:58px;min-height:58px}.controls{gap:10px}.pad{font-size:19px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar"><div class="brand">MAVERICK <span>RUN</span></div><div class="top-actions"><label class="ui-btn load-label" for="sheetFile">LOAD SHEET</label><input id="sheetFile" class="file-input" type="file" accept="image/png,image/*"><button id="animationsOpen" class="ui-btn">ANIMATIONS</button></div></header>
+  <div class="stage-wrap"><canvas id="game" width="480" height="270" aria-label="X action game"></canvas><div class="status"><span>ENERGY</span><span id="stateLabel">READY</span></div><div class="meter"><i id="energy"></i></div><div id="toast" class="toast"></div></div>
+  <div class="help">Touch: move, jump, dash and attack · Hold Buster to charge, release to fire</div>
+  <section class="controls" aria-label="Touch controls">
+   <div class="dpad"><button class="pad up" data-action="up" aria-label="Up">▲</button><button class="pad left" data-action="left" aria-label="Left">◀</button><button class="pad right" data-action="right" aria-label="Right">▶</button><button class="pad down" data-action="down" aria-label="Down">▼</button></div>
+   <div class="actions"><button class="action" data-action="jump"><b>▲</b>JUMP</button><button class="action" data-action="dash"><b>➜</b>DASH</button><button class="action" data-action="saber"><b>╱</b>SABER</button><button class="action" data-action="buster"><b>●</b>BUSTER</button></div>
+  </section>
+  <div class="footnote">Keyboard: Arrows/WASD · Space jump · Z dash · X saber · C buster · T ready pose</div>
+</div>
+<div id="animModal" class="modal" role="dialog" aria-modal="true" aria-label="Animations">
+ <div class="modal-card"><div class="modal-head"><h2>ANIMATIONS</h2><button id="animationsClose" class="ui-btn">CLOSE</button></div><div class="preview-bar"><button id="prevFrame" class="ui-btn">◀ FRAME</button><div id="previewName" class="preview-name">Choose an animation</div><button id="nextFrame" class="ui-btn">FRAME ▶</button><button id="previewPlay" class="ui-btn">PLAY</button></div><div id="animList" class="anim-list"></div></div>
+</div>
+<script>
+'use strict';
+(() => {
+const W=480,H=270,FLOOR=224,STEP=1000/60,canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:false}),$=s=>document.querySelector(s);
+ctx.imageSmoothingEnabled=false;
+const ROWS=[
+ ['idle','Stand / idle',42,83],['busterIdle','Buster shoot stand',98,138],['ready','Saber ready pose',144,193],['slash1','Slash 1',200,243],['slash2','Slash 2',252,299],['slash3','Slash 3',309,370],['dashSlash','Dash slash',382,421],['run','Run',432,469],['runBuster','Run + shoot',483,520],['jump','Jump',533,583],['jumpBuster','Jump + shoot',590,639],['airSlash','Air slash',652,701],['risingSlash','Rising slash',710,775],['risingFall','Fall after rising slash',788,851],['plunge','Plunge',866,915],['dash','Dash',929,968],['dashBuster','Dash + shoot',978,1017],['climb','Ladder climb',1023,1085],['ladderSlash','Ladder slash',1090,1142],['effects','Shots / hits',1159,1209],['charge','Charge rings',1422,1479],['bursts','Hit bursts',1487,1523],['bullets','Bullets',1531,1557]
+];
+const rows=Object.fromEntries(ROWS.map(r=>[r[0],r])),frames={},source={image:null,ready:false};
+let toastTimer=0;
+function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2100)}
+function makeFallbackFrame(kind,index,total){
+ const c=document.createElement('canvas');c.width=40;c.height=48;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+ const palette={body:'#1678bd',light:'#49caff',dark:'#164474',boot:'#10243d',face:'#f6d184',red:'#f24f79'};
+ const crouch=['dash','dashBuster','plunge'].includes(kind),air=kind.toLowerCase().includes('jump')||kind.includes('slash')||kind==='plunge';
+ const shift=(index%3)-1,leg=kind==='run'||kind==='runBuster'?((index%2)?2:-2):0;
+ function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(x,y,w,h)}
+ // Deliberately pixelated stand-in until a sheet is loaded.
+ rect(14,3,14,12,palette.body);rect(12,5,17,5,palette.light);rect(23,8,7,3,palette.face);rect(13,14,14,12,palette.body);rect(10,17,5,8,palette.dark);rect(27,16,5,10,palette.light);
+ rect(13,25,7,12,palette.dark);rect(21,25,7,12,palette.body);rect(10+leg,36,11,7,palette.boot);rect(21-leg,36,12,7,palette.boot);
+ if(kind.toLowerCase().includes('slash')||kind.startsWith('slash')){rect(30,14+shift,3,15,palette.light);rect(33,8+shift,2,14,'#eaffff');rect(29,12+shift,11,2,'#b3fff8')}
+ else if(kind.toLowerCase().includes('buster')||kind==='bullets'||kind==='effects'){rect(29,18,8,8,palette.dark);rect(35,19,4,6,palette.light);rect(38,20,2,4,'#c7ffff')}
+ if(kind==='ready'){rect(30,5,2,22,'#bbfaff');rect(31,4,2,14,'#f8ffff')}
+ if(kind==='charge'){g.strokeStyle='#71f5ff';g.lineWidth=2;g.beginPath();g.arc(20,25,8+index%7,0,Math.PI*2);g.stroke()}
+ if(kind==='bursts'){rect(17,19,6,6,'#fff78b');rect(10,23,4,2,palette.red);rect(26,22,4,2,palette.red)}
+ if(kind==='climb'||kind==='ladderSlash'){rect(6,5,2,42,'#ba9b69');rect(32,5,2,42,'#ba9b69');for(let y=10;y<45;y+=9)rect(6,y,28,2,'#d7bc84')}
+ return {canvas:c,w:40,h:48,ax:20,ay:43};
+}
+function initFallback(){for(const r of ROWS){const id=r[0];frames[id]=Array.from({length:Math.max(3,id==='idle'?4:3)},(_,i)=>makeFallbackFrame(id,i,3))}source.ready=false}
+initFallback();
+function sliceSheet(img){
+ const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0);const im=g.getImageData(0,0,c.width,c.height),d=im.data;
+ for(let p=0;p<d.length;p+=4)if(d[p]===0&&d[p+1]===106&&d[p+2]===0)d[p+3]=0;
+ g.putImageData(im,0,0);source.image=c;
+ let count=0;
+ for(const [id,,y0,y1] of ROWS){let xActive=[];for(let x=0;x<c.width;x++){let n=0;for(let y=y0;y<=Math.min(y1,c.height-1);y++){let a=d[(y*c.width+x)*4+3];if(a>0)n++}xActive[x]=n>0}
+ let runs=[],start=-1,last=-1;for(let x=0;x<xActive.length;x++){if(xActive[x]){if(start<0)start=x;last=x}else if(start>=0&&x-start>0){if(x-start<=3)continue;runs.push([start,last]);start=-1;last=-1}}if(start>=0)runs.push([start,last]);
+ // Merge tiny gaps by bridging at most 2 empty columns; crop every connected horizontal sprite group.
+ const merged=[];for(const run of runs){let prev=merged[merged.length-1];if(prev&&run[0]-prev[1]<=3)prev[1]=run[1];else merged.push(run)}
+ const list=[];for(const [xa,xb] of merged){let ya=c.height,yb=0;for(let x=xa;x<=xb;x++)for(let y=y0;y<=Math.min(y1,c.height-1);y++)if(d[(y*c.width+x)*4+3]){ya=Math.min(ya,y);yb=Math.max(yb,y)}if(yb<ya||xb-xa<2)continue;
+ const fw=xb-xa+1,fh=yb-ya+1,fc=document.createElement('canvas');fc.width=fw;fc.height=fh;fc.getContext('2d').drawImage(c,xa,ya,fw,fh,0,0,fw,fh);
+ const fd=fc.getContext('2d').getImageData(0,0,fw,fh).data;let footY=fh-1,minX=fw,maxX=0;for(let y=Math.max(0,fh-4);y<fh;y++)for(let x=0;x<fw;x++)if(fd[(y*fw+x)*4+3]){minX=Math.min(minX,x);maxX=Math.max(maxX,x)}
+ list.push({canvas:fc,w:fw,h:fh,ax:minX<=maxX?(minX+maxX+1)/2:fw/2,ay:footY+1});count++
+ }
+ frames[id]=list.length?list:[makeFallbackFrame(id,0,1)];
+ }
+ source.ready=true;const bad=Object.entries(frames).filter(([,v])=>!v.length);toast(`Sprite sheet sliced · ${count} frames`);console.info('Sheet validation',bad.length?'failed':'passed',count,'frames');buildAnimationList();
+}
+$('#sheetFile').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{try{sliceSheet(img)}catch(err){console.error(err);toast('Could not slice that image');initFallback()}finally{URL.revokeObjectURL(url)}};img.onerror=()=>toast('Image could not be loaded');img.src=url});
+const ANIMS=[
+ {id:'idle',name:'Idle loop',rows:['idle'],loop:true,description:'Stand and breathe'},
+ {id:'run',name:'Run',rows:['run'],loop:true,description:'Start frame into run loop'},
+ {id:'jump',name:'Jump',rows:['jump'],loop:true,description:'Takeoff, rise, hang, fall'},
+ {id:'land',name:'Landing',rows:['jump'],loop:false,description:'Final landing pose'},
+ {id:'dash',name:'Dash',rows:['dash'],loop:true,description:'Dash start, loop and skid stop'},
+ {id:'combo',name:'3-hit saber combo',rows:['slash1','slash2','slash3'],loop:false,description:'Three chained ground slashes'},
+ {id:'dashSlash',name:'Dash slash',rows:['dashSlash'],loop:false,description:'Saber slash while dashing'},
+ {id:'airSlash',name:'Air slash',rows:['airSlash'],loop:false,description:'Mid-air saber attack'},
+ {id:'risingSlash',name:'Rising slash',rows:['risingSlash','risingFall'],loop:false,description:'Up + Saber'},
+ {id:'plunge',name:'Plunge',rows:['plunge'],loop:false,description:'Down + Saber in air'},
+ {id:'busterIdle',name:'Buster — stand',rows:['busterIdle'],loop:false,description:'Standing shot pose'},
+ {id:'runBuster',name:'Buster — run',rows:['runBuster'],loop:true,description:'Run and fire'},
+ {id:'jumpBuster',name:'Buster — jump',rows:['jumpBuster'],loop:true,description:'Air shot pose'},
+ {id:'dashBuster',name:'Buster — dash',rows:['dashBuster'],loop:true,description:'Dash and fire'},
+ {id:'charge',name:'Charge shot + rings',rows:['charge'],loop:true,description:'Hold Buster to charge'},
+ {id:'ready',name:'Saber ready pose',rows:['ready'],loop:true,description:'Tap T / Ready'},
+ {id:'climb',name:'Ladder climb',rows:['climb'],loop:true,description:'Up near ladder'},
+ {id:'ladderSlash',name:'Ladder slash',rows:['ladderSlash'],loop:false,description:'Saber while climbing'},
+ {id:'effects',name:'Shots and hits',rows:['effects','bullets'],loop:true,description:'Projectile and hit effects'},
+ {id:'chargeFx',name:'Charge rings',rows:['charge'],loop:true,description:'Charge ring effects'},
+ {id:'bursts',name:'Hit bursts',rows:['bursts'],loop:true,description:'Impact effects'}
+];
+function refsFor(id){const def=ANIMS.find(a=>a.id===id);if(!def)return[];return def.rows.flatMap(row=>(frames[row]||[]).map((_,i)=>({row,index:i}))).filter(ref=>frames[ref.row]&&frames[ref.row][ref.index])}
+function buildAnimationList(){const list=$('#animList');list.innerHTML='';for(const def of ANIMS){const b=document.createElement('button');b.className='anim-option'+(preview.id===def.id?' selected':'');b.innerHTML=`${def.name}<small>${def.description} · ${(refsFor(def.id)||[]).length} frames</small>`;b.addEventListener('click',()=>selectPreview(def.id));list.appendChild(b)}}
+const preview={id:'idle',index:0,playing:true,ticks:0};
+function selectPreview(id){preview.id=id;preview.index=0;preview.playing=true;preview.ticks=0;const def=ANIMS.find(a=>a.id===id);$('#previewName').textContent=def?`${def.name} · frame 1/${Math.max(1,refsFor(id).length)}`:'Choose an animation';buildAnimationList()}
+$('#animationsOpen').addEventListener('click',()=>{$('#animModal').classList.add('open');buildAnimationList()});$('#animationsClose').addEventListener('click',()=>$('#animModal').classList.remove('open'));
+$('#prevFrame').addEventListener('click',()=>{const n=refsFor(preview.id).length;preview.index=(preview.index+n-1)%Math.max(1,n);preview.playing=false});$('#nextFrame').addEventListener('click',()=>{const n=refsFor(preview.id).length;preview.index=(preview.index+1)%Math.max(1,n);preview.playing=false});$('#previewPlay').addEventListener('click',()=>{preview.playing=!preview.playing;$('#previewPlay').textContent=preview.playing?'PAUSE':'PLAY'});
+const held=new Set(),pressed=new Set(),sources=new Map(),keySource=new Set();
+function setInput(source,action,down){const before=new Set(held);if(down){sources.set(source,action)}else sources.delete(source);held.clear();for(const a of sources.values())held.add(a);if(action&&down&&!before.has(action))pressed.add(action);if(action&&!down&&before.has(action)&&!held.has(action))onRelease(action)}
+function onRelease(action){if(action==='buster'&&game.charge>0){game.shot=24;game.shotPower=game.charge;game.charge=0;if(!game.airborne&&!held.has('right')&&!held.has('left'))setAnim('busterIdle',18)}}
+function bindTouch(){document.querySelectorAll('[data-action]').forEach(el=>{const action=el.dataset.action;el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);el.classList.add('active');setInput(`p${e.pointerId}`,action,true)},{passive:false});const end=e=>{if(e) e.preventDefault();el.classList.remove('active');setInput(`p${e.pointerId}`,action,false)};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);el.addEventListener('lostpointercapture',end)})}
+bindTouch();
+const keyMap={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down', ' ':'jump',z:'dash',Z:'dash',x:'saber',X:'saber',c:'buster',C:'buster',t:'ready',T:'ready'};
+window.addEventListener('keydown',e=>{const a=keyMap[e.key];if(!a)return;e.preventDefault();if(!keySource.has(e.key)){keySource.add(e.key);setInput(`k${e.key}`,a,true)}});
+window.addEventListener('keyup',e=>{const a=keyMap[e.key];if(!a)return;e.preventDefault();keySource.delete(e.key);setInput(`k${e.key}`,a,false)});
+window.addEventListener('blur',()=>{for(const [id,a] of [...sources])setInput(id,a,false);keySource.clear()});
+const game={x:105,feet:FLOOR,vy:0,airborne:false,facing:1,anim:'idle',animTick:0,stateTick:0,dashTicks:0,attackHit:0,comboQueued:0,charge:0,shot:0,shotPower:0,ladder:false,ready:false};
+function setAnim(id,duration=0){if(game.anim!==id){game.anim=id;game.animTick=0}game.stateTick=duration}
+function clampPlayer(){game.x=Math.max(27,Math.min(W-27,game.x));if(game.feet>=FLOOR){game.feet=FLOOR;game.vy=0;game.airborne=false}}
+function beginSaber(){game.ready=false;if(game.ladder){setAnim('ladderSlash');game.stateTick=24;return}if(game.dashTicks>0){setAnim('dashSlash');game.stateTick=21;return}if(game.airborne){if(held.has('up')){setAnim('risingSlash');game.vy=-5.8;game.stateTick=31}else if(held.has('down')){setAnim('plunge');game.vy=7.8;game.stateTick=25}else{setAnim('airSlash');game.stateTick=24}return}
+ game.attackHit=1;game.comboQueued=0;setAnim('slash1');game.stateTick=Math.max(10,(frames.slash1||[]).length*4)}
+function updateGame(){
+ if(pressed.has('ready')){game.ready=!game.ready;setAnim(game.ready?'ready':'idle')}
+ const left=held.has('left'),right=held.has('right'),move=(right?1:0)-(left?1:0);if(move){game.facing=move;game.ready=false;}
+ if(game.ladder&&(move||pressed.has('jump'))){game.ladder=false;if(game.feet<FLOOR){game.airborne=true;game.vy=0}}
+  if(pressed.has('jump')&&!game.airborne&&!game.ladder&&!game.anim.startsWith('slash')&&!game.anim.includes('Slash')){game.vy=-8.2;game.airborne=true;game.ready=false;setAnim('jump')}
+ if(pressed.has('dash')&&game.dashTicks<=0){game.dashTicks=34;game.ready=false;game.facing=move||game.facing;setAnim('dash')}
+ if(pressed.has('saber')){if(['slash1','slash2','slash3'].includes(game.anim)){if(game.attackHit<3)game.comboQueued=Math.min(3-game.attackHit,game.comboQueued+1)}else beginSaber()}
+ if(held.has('buster'))game.charge=Math.min(90,game.charge+1);
+ if(game.ladder&&held.has('up')){game.feet=Math.max(112,game.feet-1.6);if(game.anim!=='ladderSlash')setAnim('climb')}
+ else if(game.airborne){game.vy=Math.min(8.5,game.vy+0.34);game.feet+=game.vy;if(game.anim==='risingSlash'&&game.vy>0)setAnim('risingFall');if(game.feet>=FLOOR){game.feet=FLOOR;game.vy=0;game.airborne=false;if(['jump','jumpBuster','risingFall','plunge'].includes(game.anim)){setAnim('idle');game.stateTick=0}}}
+ if(game.dashTicks>0){game.dashTicks--;game.x+=game.facing*4.7;if(game.anim!=='dashSlash'&&game.anim!=='dashBuster')setAnim(held.has('buster')?'dashBuster':'dash');if(game.dashTicks===0&&game.anim==='dash')setAnim('idle')}
+ else if(!game.ladder&&move){game.x+=move*(game.airborne?1.7:2.1);if(!game.airborne&&!['slash1','slash2','slash3','airSlash','risingSlash','risingFall','plunge','ladderSlash'].includes(game.anim))setAnim(held.has('buster')?'runBuster':'run')}
+ if(pressed.has('up')&&Math.abs(game.x-408)<45&&!game.airborne){game.ladder=true;setAnim('climb')}
+ if(game.ladder&&pressed.has('down')&&game.feet>=FLOOR-2){game.ladder=false;setAnim('idle')}
+ if(game.shot>0)game.shot--;
+ if(game.stateTick>0){game.stateTick--;if(game.stateTick===0){if(['slash1','slash2','slash3'].includes(game.anim)&&game.comboQueued>0&&game.attackHit<3){game.attackHit++;game.comboQueued--;const id='slash'+game.attackHit;setAnim(id,Math.max(10,(frames[id]||[]).length*4))}else if(['slash1','slash2','slash3'].includes(game.anim)){setAnim('idle')}else if(game.ladder){setAnim('climb')}else if(!['jump','jumpBuster','dash','climb','ready'].includes(game.anim)){setAnim(game.airborne?'jump':'idle')}}}
+ if(!game.airborne&&!game.dashTicks&&!game.stateTick&&!game.ladder){if(game.anim==='run'||game.anim==='runBuster'){if(!move)setAnim('idle')}else if(game.anim==='idle'&&held.has('buster'))setAnim('busterIdle');else if(game.anim==='busterIdle'&&!held.has('buster')&&!game.shot)setAnim('idle');else if(game.anim==='ready'&&!game.ready)setAnim('idle')}
+ if(game.airborne&&held.has('buster')&&!['airSlash','plunge','risingSlash','risingFall'].includes(game.anim))setAnim('jumpBuster');
+ clampPlayer();game.animTick++;pressed.clear();
+}
+function pickFrame(anim,tick){const arr=frames[anim]&&frames[anim].length?frames[anim]:frames.idle;const idx=Math.floor(tick/4)%arr.length;return arr[idx]}
+function drawBackground(){
+ const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0b2440');sky.addColorStop(.7,'#102b42');sky.addColorStop(1,'#0a1a2a');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#b9eeff';for(let i=0;i<32;i++){const x=(i*83+21)%W,y=(i*47+17)%155;ctx.fillRect(x,y,1,1)}
+ ctx.fillStyle='#153650';for(let x=-15;x<W;x+=58){ctx.fillRect(x,122,36,102);ctx.fillStyle='#1e4963';ctx.fillRect(x+5,133,4,50);ctx.fillRect(x+17,133,4,50);ctx.fillRect(x+27,133,4,50);ctx.fillStyle='#153650'}
+ // distant industrial skyline
+ ctx.fillStyle='#0c2437';for(let x=0;x<W;x+=35){const h=22+(x*7%38);ctx.fillRect(x,FLOOR-h,28,h);ctx.fillStyle='#1a4962';ctx.fillRect(x+5,FLOOR-h+8,4,3);ctx.fillRect(x+17,FLOOR-h+8,4,3);ctx.fillStyle='#0c2437'}
+ ctx.fillStyle='#263e4d';ctx.fillRect(0,FLOOR,W,H-FLOOR);ctx.fillStyle='#65d8eb';ctx.fillRect(0,FLOOR,W,2);ctx.fillStyle='#344c5c';for(let x=0;x<W;x+=24)ctx.fillRect(x,FLOOR+8,12,2);
+ // ladder / objective marker
+ ctx.fillStyle='#be9a5c';ctx.fillRect(407,138,3,FLOOR-138);ctx.fillRect(426,138,3,FLOOR-138);for(let y=145;y<FLOOR;y+=13)ctx.fillRect(407,y,22,3);
+ ctx.fillStyle='#2e617a';ctx.fillRect(353,204,62,20);ctx.fillStyle='#7edff1';ctx.fillRect(358,209,8,7);ctx.fillRect(373,209,8,7);ctx.fillRect(388,209,8,7);
+}
+function drawFrame(frame,x,feet,flip=true,scale=1){if(!frame)return;let s=Math.min(scale,145/frame.w,82/frame.h);const dw=frame.w*s,dh=frame.h*s;ctx.save();if(flip&&game.facing<0){ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(frame.canvas,-frame.ax*s,feet-frame.ay*s,dw,dh)}else ctx.drawImage(frame.canvas,x-frame.ax*s,feet-frame.ay*s,dw,dh);ctx.restore()}
+function drawGame(){ctx.clearRect(0,0,W,H);drawBackground();
+ // Enemy target
+ ctx.fillStyle='#5e183b';ctx.fillRect(362,186,30,30);ctx.fillStyle='#d34167';ctx.fillRect(367,179,20,12);ctx.fillStyle='#ffe273';ctx.fillRect(373,183,3,3);ctx.fillRect(381,183,3,3);ctx.fillStyle='#18273a';ctx.fillRect(367,213,8,11);ctx.fillRect(381,213,8,11);
+ const modal=$('#animModal').classList.contains('open');let f,fx=game.x,feet=game.feet,anim=game.anim;
+ if(modal){const refs=refsFor(preview.id);if(preview.playing&&refs.length){preview.ticks++;if(preview.ticks>=4){preview.ticks=0;preview.index=(preview.index+1)%refs.length}}const ref=refs[preview.index]||{row:'idle',index:0};f=frames[ref.row]?.[ref.index];fx=W/2;feet=FLOOR;$('#previewName').textContent=`${ANIMS.find(a=>a.id===preview.id)?.name||''} · frame ${preview.index+1}/${Math.max(1,refs.length)}`}
+ else {if(['slash1','slash2','slash3'].includes(anim)){}if(game.anim==='charge'&&frames.charge)f=pickFrame('charge',game.animTick);else if(game.charge>0&&game.charge%8<6)f=pickFrame('charge',game.charge);else f=pickFrame(anim,game.animTick)}
+ if(game.charge>10&&!modal){ctx.globalAlpha=.72;const ring=pickFrame('charge',game.charge);drawFrame(ring,game.x,game.feet-25,false,.72);ctx.globalAlpha=1}
+ drawFrame(f,fx,feet,true,1.3);
+ if(game.shot>0&&!modal){const bx=game.x+game.facing*(25+(24-game.shot)*3);ctx.fillStyle=game.shotPower>30?'#b9fff4':'#63eaff';ctx.fillRect(bx,game.feet-28,10,5);ctx.fillStyle='#fff';ctx.fillRect(bx+2,game.feet-29,4,2)}
+ $('#energy').style.width=`${Math.max(0,100-game.charge/90*70)}%`;
+ $('#stateLabel').textContent=source.ready?'SHEET READY':(game.charge?'CHARGING':game.anim.toUpperCase());
+}
+function loop(now){if(!loop.last)loop.last=now;let delta=Math.min(250,now-loop.last);loop.last=now;loop.acc=(loop.acc||0)+delta;while(loop.acc>=STEP){if(!$('#animModal').classList.contains('open'))updateGame();loop.acc-=STEP}drawGame();requestAnimationFrame(loop)}
+function runSelfTests(){
+ const bad=[];for(const def of ANIMS){const refs=refsFor(def.id);if(!refs.length)bad.push(`empty animation ${def.id}`);for(const r of refs)if(!frames[r.row]?.[r.index])bad.push(`missing ${r.row}[${r.index}]`)}
+ if(Object.values(frames).some(list=>!list.length||list.some(f=>!f.canvas||f.w<1||f.h<1||f.ax<0||f.ay<0)))bad.push('invalid frame or foot anchor');
+ setInput('self-left','left',true);setInput('self-jump','jump',true);if(!held.has('left')||!held.has('jump'))bad.push('multi-input check failed');setInput('self-left','left',false);setInput('self-jump','jump',false);pressed.clear();
+ if(bad.length){console.error('Sprite lab self-checks failed',bad);toast('Animation check failed — see console')}else console.info('Sprite lab self-checks passed: all animations mapped, frames anchored, multi-input verified');
+}
+runSelfTests();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
